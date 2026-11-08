@@ -143,6 +143,7 @@ from (select title, text from posts limit 3) as props;
 Made with
 
 - [Liquid](https://shopify.github.io/liquid/) templating language via [liquid-rust](https://github.com/cobalt-org/liquid-rust)
+- [Handlebars](https://handlebarsjs.com/) templating language via via [rust-handlebars](https://docs.rs/handlebars/)
 - [pgrx](https://github.com/pgcentralfoundation/pgrx) Rust extension framework for PostgreSQL
 
 ## Build and run locally

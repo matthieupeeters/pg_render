@@ -1,7 +1,8 @@
-create or replace function render_template(template text, json_data json)
+
+
+create or replace function render_template(template text, json_data json, engine text = 'liquid', template_name text = '')
 returns text as $$
 declare
-  engine text := 'liquid';
   result_text text;
 begin
   result_text := null;
@@ -9,6 +10,8 @@ begin
     case engine
       when 'liquid' then
         result_text := pg_render_liquid(template, json_data);
+      when 'handlebars' then
+        result_text := pg_render_handlebars(template, json_data, template_name);
       else
         result_text := format(template, array(select json_array_elements_text(json_data)));
     end case;

@@ -1,5 +1,10 @@
 # pg_render
 
+**Note that this is an incomplete/unfinished fork of the real pg_render**
+**The real pg_render can be accessed here: [https://github.com/mkaski/pg_render](pg_render)**
+
+
+
 Render engine extension for PostgreSQL.
 
 ```sql
@@ -153,7 +158,17 @@ Made with
 cargo install --locked cargo-pgrx
 cargo pgrx init
 cargo pgrx run
+
 ```
+
+## Install to local database
+
+```bash
+# build as per previous paragraph
+cargo pgrx install --sudo
+```
+
+
 
 ## Test
 

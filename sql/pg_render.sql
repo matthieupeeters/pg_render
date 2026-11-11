@@ -1,6 +1,6 @@
 
 
-create or replace function render_template(template text, json_data json, engine text = 'liquid', template_name text = '')
+create or replace function render_template(template text, json_data json, engine text, template_name text = '')
 returns text as $$
 declare
   result_text text;
@@ -24,10 +24,11 @@ end;
 $$ language plpgsql stable;
 
 -- main render function
-create or replace function render(template text, input anyelement)
+create or replace function render(template text, input anyelement, engine text = 'liquid', template_name text = '')
 returns text as $$
 declare
   typeof regtype := pg_typeof(input)::regtype;
+  json_input json;
   json_types regtype[] := array['json'::regtype, 'jsonb'::regtype];
   -- single value types
   text_types regtype[] := array['text'::regtype, 'varchar'::regtype, 'char'::regtype];
@@ -38,27 +39,30 @@ begin
   case
     -- single value
     when typeof = any(text_types || numeric_types || time_types || other_types) then
-      return render_template(template, json_build_object('value', input));
+      json_input := json_build_object('value', input);
     -- array of values
     when typeof::text = 'array' or typeof::text LIKE '%[]' then
-      return render_template(template, json_build_object('values', input));
+      json_input := json_build_object('values', input);
     -- json object
     when typeof = any(json_types) then
       -- if the json object is an array, wrap it in a 'rows' object
       if json_typeof(input::json) = 'array' then
-        return render_template(template, json_build_object('rows', input));
+        json_input := json_build_object('rows', input);
       -- otherwise, just pass the object as json
       else
-        return render_template(template, input::json);
+        json_input := input::json;
       end if;
     -- the input type is not supported
     else
       raise exception 'unsupported input parameter type: %', typeof;
   end case;
+  return render_template(template, json_input, engine, template_name);
 end;
 $$ language plpgsql stable;
 
-create or replace function render_agg_sfunc(state text, template text, input anyelement)
+
+
+create or replace function render_agg_sfunc(state text, template text, input anyelement, engine text = 'liquid', template_name text = '')
 returns text language plpgsql as $$
 declare
   typeof regtype := pg_typeof(input)::regtype;
@@ -81,7 +85,7 @@ begin
     json_input := row_to_json(input);
   end if;
   -- render the template to state
-  return coalesce(state, '') || render(template, json_input);
+  return coalesce(state, '') || render(template, json_input, engine, template_name);
 end $$;
 
 create or replace function render_agg_final(state text)
@@ -90,7 +94,7 @@ begin
   return coalesce(state, '');
 end $$;
 
-create aggregate render_agg(text, anyelement) (
+create aggregate render_agg(template text, input anyelement, engine text, template_name text) (
   sfunc = render_agg_sfunc,
   stype = text,
   finalfunc = render_agg_final,

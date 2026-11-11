@@ -1,6 +1,7 @@
 # pg_render
 
 **Note that this is an incomplete/unfinished fork of the real pg_render**
+**Fork is to add handlebars functionality**
 **The real pg_render can be accessed here: [https://github.com/mkaski/pg_render](pg_render)**
 
 
